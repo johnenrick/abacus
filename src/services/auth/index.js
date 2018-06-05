@@ -1,47 +1,148 @@
 // src/auth/index.js
-
 import {router} from '../../router/index'
-
-// URL and endpoint constants
-const API_URL = 'http://localhost:3001/'
-const LOGIN_URL = API_URL + 'sessions/create/'
-const SIGNUP_URL = API_URL + 'users/'
-
+import ROUTER from '../../router'
+import Vue from 'vue'
 export default {
   user: {
     userID: 0,
     username: '',
-    type: 0
+    type: 0,
+    company_id: 0,
+    company_branch_id: 0
   },
+  tokenData: {
+    token: null,
+    tokenTimer: 1000 * 60 * 5,
+    verifyingToken: false,
+    isRefreshing: false
+  },
+  currentPath: false,
   setUser(userID, username, type){
     if(userID === null){
       username = null
       type = null
     }
-    this.user.userID = userID
+    this.user.userID = userID * 1
     this.user.username = username
-    this.user.type = type
+    this.user.type = type * 1
   },
-  authenticate(username, password){
-    let userID = 1
-    let type = 2
-    if(username === 'admin'){
-      type = 1
+  setCompany(companyID, companyBranch){
+    if(companyID === null){
+      companyID = null
+      companyBranch = null
     }
-    this.setUser(userID, username, type)
-    localStorage.setItem('usertoken', JSON.stringify(this.user))
+    this.user.company_id = companyID * 1
+    this.user.company_branch_id = companyBranch
+    localStorage.setItem('company_id', companyID)
+    localStorage.setItem('company_branch_id', companyBranch)
   },
-  checkAuthentication(){
+  setToken(token){
+    this.tokenData.token = token
+    localStorage.setItem('usertoken', token)
+    localStorage.setItem('last_token_update', new Date())
+    token = token === 'null' ? null : token
+    if((token !== null) && !this.tokenData.isRefreshing){
+      /**
+        TODO
+          Multiple authenticate/refresh request has been sent. Comment the isRefreshing to see the error
+      */
+      this.tokenData.isRefreshing = true
+      // setInterval()
+      setTimeout(() => {
+        let vue = new Vue()
+        vue.APIRequest('authenticate/refresh', {}, (response) => {
+          if(token){
+            this.setToken(response['token'])
+            this.addTokenHistory('refreshToken', token)
+
+          }
+          this.tokenData.isRefreshing = false
+        }, (response) => {
+          this.tokenData.isRefreshing = false
+          console.error(JSON.parse(localStorage.getItem('token_history')))
+          alert('failed to refresh token')
+          // ROUTER.go('/')
+        })
+      }, this.tokenData.tokenTimer) // 50min
+    }
+  },
+  authenticate(username, password, callback, errorCallback){
+    let vue = new Vue()
+    let credentials = {
+      username: username,
+      password: password
+    }
+    localStorage.removeItem('token_history')
+    vue.APIRequest('authenticate', credentials, (response) => {
+      this.setToken(response.token)
+      this.addTokenHistory('authenticate', response.token)
+      vue.APIRequest('authenticate/user', {}, (userInfo) => {
+        this.setUser(userInfo.id, userInfo.username, userInfo.account_type_id)
+        console.log(userInfo)
+        if(callback){
+          callback(userInfo)
+        }
+      })
+
+    }, (response, status) => {
+      if(errorCallback){
+        errorCallback(response, status)
+      }
+    })
+  },
+  checkAuthentication(callback){
+    if(this.tokenData.verifyingToken){
+      return
+    }
+    this.tokenData.verifyingToken = true
     let token = localStorage.getItem('usertoken')
-    if(token){
-      token = JSON.parse(token)
-      this.setUser(token.userID, token.username, token.type)
+    this.user.company_id = localStorage.getItem('company_id')
+    this.user.company_branch_id = localStorage.getItem('company_branch_id')
+    if(token && token !== 'null'){
+      this.setToken(token)
+      this.addTokenHistory('checkAuthentication', token)
+      let vue = new Vue()
+      vue.APIRequest('authenticate/user', {}, (userInfo) => {
+        this.setUser(userInfo.id, userInfo.username, userInfo.account_type_id)
+        this.tokenData.verifyingToken = false
+        if(typeof callback !== 'undefined'){
+          callback()
+        }
+      }, (response) => {
+        alert(token)
+        alert('failed')
+        this.setToken(null)
+        this.tokenData.verifyingToken = false
+        ROUTER.push({
+          path: this.currentPath
+        })
+
+      })
     }else{
+      this.tokenData.verifyingToken = false
       this.setUser(null)
+      if(typeof callback !== 'undefined'){
+        callback()
+      }
     }
   },
   deaunthenticate(){
     localStorage.removeItem('usertoken')
+    localStorage.removeItem('company_id')
+    localStorage.removeItem('company_branch_id')
+    localStorage.removeItem('token_history')
+    let vue = new Vue()
+    vue.APIRequest('authenticate/invalidate')
     this.setUser(null)
+  },
+  addTokenHistory(source, token){
+    let tokenHistory = localStorage.getItem('token_history') ? JSON.parse(localStorage.getItem('token_history')) : []
+    let date = new Date()
+    tokenHistory.push({
+      token: token,
+      time_added: date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes(),
+      source: source
+    })
+    localStorage.setItem('token_history', JSON.stringify(tokenHistory))
   }
 }

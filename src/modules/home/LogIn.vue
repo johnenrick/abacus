@@ -1,55 +1,81 @@
 <template>
   <div class="container">
-    <div class="row">
-      <div class="col-sm-6 col-sm-offset-3">
-        <div class="panel panel-primary">
-          <div class="panel-heading">Welcome to Abacus Point of Sale System!</div>
-          <div class="panel-body">
+      <div class="float-right">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title text-info">Welcome to LitePOS System!</h5>
+            <hr>
+            <div v-if="errorMessage !== '' && !isLoading" class="alert alert-danger ">
+              <strong>Failed!</strong> {{errorMessage}}
+            </div>
             <form class="form-horizontal">
-              <div class="form-group">
-                <label  class="col-md-2 control-label">Username</label>
-                <div class="col-md-10">
-                  <input v-model="username" type="text" class="form-control"  placeholder="Username">
-                </div>
+              <div class="form-group ">
+                <label class="font-weight-bold">Username</label>
+                <input v-model="username"
+                    v-bind:disabled="isLoading"
+                    type="text"
+                    class="form-control"
+                    placeholder="Username">
               </div>
               <div class="form-group">
-                <label class="col-md-2 control-label">Password</label>
-                <div class="col-md-10">
-                  <input v-model="password"  type="password" class="form-control" placeholder="Password">
-                </div>
+                <label class="font-weight-bold">Password</label>
+                <input v-model="password"
+                v-on:keyup.13="signIn"
+                    v-bind:disabled="isLoading"
+                    type="password" class="form-control" placeholder="Password">
               </div>
-              <div class="form-group">
-                <div class="col-sm-12">
-                  <button @click="signIn" type="button" class="btn btn-primary pull-right">Sign in</button>
-                </div>
+              <div>
+                  <button
+                      @click="signIn"
+                      v-bind:disabled="isLoading"
+                      type="button"
+                      class="btn btn-success d-none"
+                      >
+                    Sign Up for <span class="font-italic font-weight-bold">Free!</span>
+                  </button>
+                  <button
+                      @click="signIn"
+                      v-bind:disabled="isLoading"
+                      type="button"
+                      class="btn btn-primary float-right"
+                      >
+                      <i class="fas fa-sign-in-alt"></i>
+                    {{isLoading ? 'Signing in...' : 'Sign In'}}
+                  </button>
               </div>
             </form>
+
           </div>
         </div>
       </div>
-    </div>
   </div>
 </template>
 <script>
-import ROUTER from '../../router'
 import AUTH from '../../services/auth'
 export default {
   name: 'LogIn',
+  mounted(){
+  },
   data(){
     return {
-      username: '',
-      password: ''
+      username: 'admin',
+      password: 'admin',
+      isLoading: false,
+      errorMessage: ''
     }
   },
   methods: {
     signIn(){
-      AUTH.authenticate(this.username, this.password)
-      ROUTER.go('/')
-      // if(AUTH.user.type === 1){
-      //   ROUTER.go('/admin')
-      // }else{
-      //   ROUTER.go('/cashier')
-      // }
+      this.isLoading = true
+      AUTH.authenticate(this.username, this.password, (response) => {
+        this.isLoading = false
+        this.$router.push({
+          path: '/' // + ((response.account_type_id === 1) ? 'admin' : 'cashier')
+        })
+      }, (response, status) => {
+        this.errorMessage = (status === 401) ? 'Username and password mismatched' : 'Cannot log in. Contact developer if error persist.'
+        this.isLoading = false
+      })
     }
   }
 }
