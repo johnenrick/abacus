@@ -34,6 +34,7 @@
           }
         },
         'account_type.description': {
+          name: 'Account Type'
         },
         status: {
           data_type: 'html',

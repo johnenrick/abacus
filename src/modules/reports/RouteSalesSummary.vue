@@ -2,7 +2,7 @@
   <div>
     <module v-on:table_filter="tableFilter" :module_name="'Route Sales Summary'" :api="api" :api_setting="api_setting" :table_setting="table_setting" :form_setting="form_setting">
       <div slot="beforeTable">
-        <horizontal-bar-chart :data_set="dataSet"></horizontal-bar-chart>
+        <horizontal-bar-chart :name="'Route Sales Summary'" :data_set="dataSet"></horizontal-bar-chart>
       </div>
     </module>
   </div>
@@ -54,7 +54,7 @@
           name: 'Description',
           db_name: 'route.description'
         },
-        total_amount: {
+        total_net_amount: {
           data_type: 'decimal'
         },
         'created_at': {}
@@ -80,7 +80,7 @@
         },
         table_setting: tableSetting,
         form_setting: formSetting,
-        dataSet: []
+        dataSet: [[]]
       }
     },
     props: {
@@ -91,11 +91,16 @@
         this.APIRequest('bus_trip/routeSalesSummary', requestOption, (response) => {
           if(response['data']){
             let tableEntries = response['data']
+            let amountSet = []
+            let passengerCountSet = []
             for(let x = 0; x < tableEntries.length; x++){
-              this.dataSet.push([tableEntries[x]['total_amount'], tableEntries[x]['route']['description']])
+              let description = tableEntries[x]['route'] ? tableEntries[x]['route']['description'] : 'Others'
+              amountSet.push([tableEntries[x]['total_net_amount'], description])
+              passengerCountSet.push([tableEntries[x]['total_passenger_quantity'], description])
             }
+            this.dataSet.push(amountSet)
+            this.dataSet.push(passengerCountSet)
           }
-          console.log(this.dataSet)
         })
       }
     }

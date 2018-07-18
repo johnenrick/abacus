@@ -11,9 +11,7 @@
     >
       <option v-for="option in options" v-bind:value="option['id']"
         v-bind:selected="option['id'] == form_data[db_name] ? 'selected' : false"
-      >
-        {{option['text']}}
-      </option>
+      >{{option['text']}}</option>
     </select>
     <span v-else class="form-control">{{this.option_lookup[form_data[db_name]]}} &nbsp;</span>
 
@@ -66,7 +64,7 @@
     methods: {
       initInputSetting(){
         typeof this.input_setting['options'] !== 'undefined' ? this.setOption(this.input_setting['options']) : null
-        this.defaultValue = this.default_value ? this.default_value : (typeof this.input_setting['options'] === 'undefined' ? null : this.input_setting['options'][0]['id'])
+        this.defaultValue = this.default_value
         if(typeof this.input_setting['option_function'] !== 'undefined'){
           this.optionFunction = this.input_setting['option_function']
           this.optionFunction(this)
@@ -97,14 +95,13 @@
       },
       setOption(options){
         this.options = options.slice(0)
-        if(typeof this.input_setting['default_text'] !== 'undefined'){
+        if(typeof this.input_setting['default_text'] !== 'undefined'){ // add default value in select if default text is defined
           this.options.unshift({
             id: typeof this.input_setting['default_value'] !== 'undefined' ? this.input_setting['default_value'] : null,
             text: this.input_setting['default_text']
           })
         }
         this.option_lookup = {}
-
         for(let x in this.options){
           vue.set(this.option_lookup, this.options[x]['id'], this.options[x]['text'])
         }

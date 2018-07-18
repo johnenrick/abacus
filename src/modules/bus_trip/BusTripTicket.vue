@@ -46,14 +46,17 @@
           }
         },
         created_at: {
-          name: 'Data & Time'
+          name: 'Date & Time'
         }
       }
       let tableSetting = {
         filterSetting: filterSetting,
         columnSetting: columnSetting,
         retrieveParameter: {
-          with_foreign_table: ['bus_trip', 'conductor']
+          with_foreign_table: ['bus_trip', 'conductor'],
+          sort: {
+            created_at: 'DESC'
+          }
         }
       }
       let busTrip = {}
@@ -63,7 +66,7 @@
           id: null,
           text: 'Select Bus Trip First'
         }]
-        if(selectedBusTripID){
+        if(selectedBusTripID && typeof busTrip[selectedBusTripID] !== 'undefined'){
           tempRouteStop = ((selectedBusTripID) ? busTrip[selectedBusTripID] : busTrip[0]).slice(0)
           tempRouteStop.unshift({
             id: null,
@@ -83,19 +86,29 @@
             input_setting: {
               api: 'bus_trip/retrieve',
               api_parameter: {
-                with_foreign_table: ['bus', 'route.route_stops']
+                with_foreign_table: ['bus', 'route.route_stops'],
+                condition: [{
+                  column: 'arrival_datetime',
+                  value: null
+                }]
               },
               default_value: null,
               default_text: 'Select Bus Trip',
               api_option_text_function: (entry) => {
-                busTrip[entry['id']] = []// entry['route']['route_stops']
-                for(let x in entry['route']['route_stops']){
-                  busTrip[entry['id']].push({
-                    id: entry['route']['route_stops'][x]['id'],
-                    text: entry['route']['route_stops'][x]['name']
-                  })
+                busTrip[entry['id']] = [] // route stops
+                if(entry['route'] && entry['route']['route_stops']){
+                  // add the routes to the bus trip
+                  for(let x in entry['route']['route_stops']){
+                    busTrip[entry['id']].push({
+                      id: entry['route']['route_stops'][x]['id'],
+                      text: entry['route']['route_stops'][x]['name']
+                    })
+                  }
+                  return entry['bus']['description'] + ' ' + entry['route']['description']
+                }else{
+                  return entry['bus']['description'] + ' ' + 'No Route'
                 }
-                return entry['bus']['description'] + ' ' + entry['route']['description']
+
               },
               on_change: (value) => {
                 selectedBusTripID = value
@@ -115,7 +128,6 @@
           //       }]
           //     },
           //     api_option_text_function: (entry) => {
-          //       console.log(entry)
           //       return entry['account_information'] ? entry['account_information']['first_name'] + ' ' + entry['account_information']['last_name'] : entry['username']
           //     },
           //     default_value: null,
@@ -129,6 +141,7 @@
               update_on_data_change: (field, formData) => {
                 return field === 'bus_trip_id'
               },
+              default_value: null,
               option_function: routeStopOptionFunction
             }
           },
@@ -151,6 +164,26 @@
           },
           total_amount: {
             input_type: 'number'
+          },
+          payment_adjustment: {
+            input_type: 'number'
+          },
+          discount_id: {
+            input_type: 'select',
+            input_setting: {
+              api: 'discount/retrieve',
+              default_value: null,
+              default_text: 'Please Select'
+            }
+          },
+          discount_image_proof: {
+            input_type: 'single_image',
+            input_setting: {
+              api_file_folder: 'discount_image_proof'
+            }
+          },
+          cash_tendered: {
+            input_type: 'decimal'
           }
         }
       }

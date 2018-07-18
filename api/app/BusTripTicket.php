@@ -18,4 +18,7 @@ class BusTripTicket extends APIModel
   public function end_route_stop(){
     return $this->belongsTo('App\RouteStop', 'end_route_stop_id');
   }
+  public function void_bus_trip_ticket(){
+    return $this->hasMany('App\VoidBusTripTicket')->where('is_approved', 0);
+  }
 }

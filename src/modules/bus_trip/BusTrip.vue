@@ -25,6 +25,18 @@
         },
         'driver_account_id': {
           label_colspan: 5
+        },
+        'active': {
+          db_name: 'arrival_datetime',
+          label_colspan: 5,
+          input_type: 'select',
+          default: null,
+          input_setting: {
+            options: [
+              {id: null, text: 'All'},
+              {id: 'NULL', text: 'Active'}
+            ]
+          }
         }
       }
       let columnSetting = {
@@ -39,8 +51,7 @@
         },
         'driver_name': {
           value_function: (entry) => {
-            console.log(entry)
-            return entry['driver'] ? entry['driver']['account_information']['first_name'] + ' ' + entry['driver']['account_information']['last_name'] : 'None1'
+            return entry['driver'] ? entry['driver']['account_information']['first_name'] + ' ' + entry['driver']['account_information']['last_name'] : 'None'
           }
         },
         'arrival_datetime': {
@@ -51,7 +62,10 @@
         filterSetting: filterSetting,
         columnSetting: columnSetting,
         retrieveParameter: {
-          with_foreign_table: ['bus', 'route', 'driver']
+          with_foreign_table: ['bus', 'route', 'driver'],
+          sort: {
+            arrival_datetime: 'DESC'
+          }
         }
       }
       let formSetting = {
@@ -78,7 +92,7 @@
                 }]
               },
               api_option_text_function: (entry) => {
-                return entry['first_name'] + ' ' + entry['full_name']
+                return entry['first_name'] + ' ' + entry['last_name']
               },
               default_value: null,
               default_text: 'Select Driver'
@@ -92,6 +106,9 @@
               default_value: null,
               default_text: 'Select Route'
             }
+          },
+          arrival_datetime: {
+            input_type: 'date'
           }
         }
       }

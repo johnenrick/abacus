@@ -27,7 +27,7 @@ class UpdateEntry extends ControllerHelper
 
 
 
-  function __construct($model, $response, $validation, $tableColumns, $notRequired, $editableForeignTable){
+  function __construct($model, $response, $validation, $tableColumns, $notRequired, $editableForeignTable, $rawRequest){
     $this->response = $response;
     $this->responseType = $response['response_type'];
     $this->tableColumns = $tableColumns;
@@ -35,6 +35,7 @@ class UpdateEntry extends ControllerHelper
     $this->notRequired = $notRequired;
     $this->editableForeignTable = $editableForeignTable;
     $this->validation = $validation;
+    $this->rawRequest = $rawRequest;
   }
 
   public function updateEntry($request){

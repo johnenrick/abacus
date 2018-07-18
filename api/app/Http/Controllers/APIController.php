@@ -28,11 +28,12 @@ class APIController extends ControllerHelper
     protected $userSession = null;
 
     protected $responseType = 'json';
-    protected $rawRequest = null;
+    // protected $rawRequest = null;
 
     protected $notRequired = array();
     protected $defaultValue = array();
     protected $requiredForeignTable = array();//children that are always retrieve, singular
+    protected $rawRequest = null;
     /***
       Array of aliased table
       e.g. [
@@ -90,7 +91,7 @@ class APIController extends ControllerHelper
     /*Controller Global*/
     protected $tableColumns = null;
     protected $tableName = null;
-
+    protected $ownerColumn = null;
     public function test(){
       $user = $this->getUserCompanyID();
       // $this->printR($this->userSession);
@@ -110,6 +111,7 @@ class APIController extends ControllerHelper
       return $request;
     }
     public function APIControllerConstructor(){
+      $this->getAuthenticatedUser();
       $this->tableColumns = $this->model->getTableColumns();
       $this->tableName = $this->model->getTable();
       $response['response_type'] = isset($request['response_type']) ? $request['response_type'] : 'json';
@@ -117,39 +119,54 @@ class APIController extends ControllerHelper
 
     public function create(Request $request){
       $this->rawRequest = $request;
+      $this->response['debug'][] = $this->ownerColumn;
+
       return $this->createEntry($request->all());
     }
     public function retrieve(Request $request){
       $this->rawRequest = $request;
-      return $this->retrieveEntry($request->all());
+      $requestArray = $request->all();
+      return $this->retrieveEntry($requestArray);
     }
     public function update(Request $request){
       $this->rawRequest = $request;
       if ($request->hasFile('image_file')){
       }
-      else{
-      }
-
       return $this->updateEntry($request->all());
     }
     public function delete(Request $request){
+      if($this->ownerColumn){
+        $this->rawRequest[$this->ownerColumn] = $this->getUserID();
+      }
       return $this->deleteEntry($request->all());
     }
 
     public function createEntry($request){
       $this->APIControllerConstructor();
+      if($this->ownerColumn){
+        $request[$this->ownerColumn] = $this->getUserID();
+      }
       $createModule = new CreateEntry(
         $this->model,
         $this->response,
         $this->validation,
         $this->tableColumns,
         $this->notRequired,
-        $this->editableForeignTable
+        $this->editableForeignTable,
+        $this->singleImageFileUpload,
+        $this->rawRequest
       );
       return $createModule->createEntry($this->replaceSessionData($request));
     }
     public function retrieveEntry($request){
       $this->APIControllerConstructor();
+      !isset($request['condition']) ? $request['condition'] = array() : NULL;
+      if($this->ownerColumn){
+        $request['condition'][] = array(
+          'column' => $this->ownerColumn,
+          'value' => $this->getUserID()
+        );
+      }
       $retrieveModule = new RetrieveEntry(
         $this->model,
         $this->response,
@@ -167,6 +184,9 @@ class APIController extends ControllerHelper
       return $retrieveModule->retrieveEntry($request);
     }
     public function updateEntry($request, $noFile = false){
+      if($this->ownerColumn){
+        $request[$this->ownerColumn] = $this->getUserID();
+      }
       $this->APIControllerConstructor();
       $updateModule = new UpdateEntry(
         $this->model,
@@ -174,12 +194,17 @@ class APIController extends ControllerHelper
         $this->validation,
         $this->tableColumns,
         $this->notRequired,
-        $this->editableForeignTable
+        $this->editableForeignTable,
+        $this->singleImageFileUpload,
+        $this->rawRequest
       );
       return $updateModule->updateEntry($this->replaceSessionData($request));
     }
     public function deleteEntry($request){
       $this->APIControllerConstructor();
+      if($this->ownerColumn){
+        $request[$this->ownerColumn] = $this->getUserID();
+      }
       $deleteEntry = new DeleteEntry($this->model, $this->response);
       return $deleteEntry->deleteEntry($request);
     }

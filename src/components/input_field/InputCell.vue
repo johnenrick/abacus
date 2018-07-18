@@ -299,7 +299,7 @@
       initSetting(){
         this.dbName = this.db_name
         this.inputName = this.inputName ? this.input_name : this.dbName
-        this.labelText = this.label ? this.label : this.input_name
+        this.labelText = this.capitalizeFirstLetter((this.label ? this.label : this.input_name).replace(/\./g, ' ')).replace('Id', 'ID')
         this.labelStyle = this.label_style
         this.labelColspan = typeof this.label_colspan !== 'undefined' ? this.label_colspan : 4
         this.inputType = this.input_type ? this.input_type : 'text'

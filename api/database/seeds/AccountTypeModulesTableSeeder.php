@@ -14,11 +14,15 @@ class AccountTypeModulesTableSeeder extends Seeder
       DB:: table('account_type_modules')->truncate();
       DB:: table('account_type_modules')->insert(array(
         // Admin
-        array('id' => 1, 'module_id' => '', 'account_type_id' => ''),
-        array('id' => 1, 'module_id' => '', 'account_type_id' => ''),
-        array('id' => 1, 'module_id' => '', 'account_type_id' => '')
+        array('module_id' => '1', 'account_type_id' => '1'),
+        array('module_id' => '2', 'account_type_id' => '1'),
+        array('module_id' => '31', 'account_type_id' => '1'),
+        array('module_id' => '8', 'account_type_id' => '1'),
+        array('module_id' => '19', 'account_type_id' => '1'),
+        array('module_id' => '22', 'account_type_id' => '1')
+
         // Cashier
         // Server
-      ))
+      ));
     }
 }

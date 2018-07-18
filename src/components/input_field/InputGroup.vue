@@ -1,11 +1,17 @@
 <template>
   <div>
+
     <div class="row">
       <template v-for="input in inputList">
         <div v-if="input['input_type'] === 'group'" v-bind:class="'col-sm-' + input['col']" >
+          <template v-if="input['title']">
+            <h4>{{input['title']}}</h4>
+          </template>
           <input-group-recursive
             ref="inputGroup"
             :inputs="input['inputs']"
+            :title="input['title']"
+            :header="input['header']"
             :form_data="form_data"
             :form_data_updated="form_data_updated"
             :form_status="form_status"
@@ -15,7 +21,6 @@
           </input-group-recursive>
         </div>
         <div v-else v-bind:class="[input['input_type'] === 'hidden' ? 'hidden' : '', 'col-sm-' + input['col']]" >
-
           <input-cell
             ref="inputCell"
             :input_name="input['input_name']"
@@ -70,6 +75,8 @@
       }
     },
     props: {
+      title: String,
+      header: Number,
       inputs: Object,
       form_data: {
         type: Object,

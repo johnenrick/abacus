@@ -91,6 +91,7 @@
     <input v-for="(id, index) in deletedForeignTable"
       v-bind:value="id"
       v-bind:name="'deleted_foreign_table['+db_name+']['+index+']'"
+      type="hidden"
     >
   </div>
 </template>
@@ -222,6 +223,9 @@
       removeEntry(rowIndex, entryID){
         if(entryID){
           this.deletedForeignTable.push(entryID)
+          console.log(this.tableEntries)
+          this.tableEntries.splice(rowIndex, 1)
+          console.log(this.tableEntries)
         }
       },
       move(index, id, direction){

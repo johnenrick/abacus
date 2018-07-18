@@ -35,7 +35,7 @@
             <button @click="$emit('form_close')" type="button"  v-bind:disabled="formStatus === 'loading'? true : false" class="btn btn-secondary">Close</button>
           </template>
           <template v-else-if="formStatus === 'editing'">
-            <button @click="formStatus = 'delete_confirmation'" v-bind:disabled="formStatus === 'loading'? true : false" type="button" class="btn btn-outline-danger pull-left"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete</button>
+            <button v-if="!no_delete" @click="formStatus = 'delete_confirmation'" v-bind:disabled="formStatus === 'loading'? true : false" type="button" class="btn btn-outline-danger pull-left"><i class="fa fa-trash-o" aria-hidden="true"></i> Delete</button>
             <button @click="submitForm" v-bind:disabled="formStatus === 'loading'? true : false" type="button" class="btn btn-outline-success"><i class="fa fa-save" aria-hidden="true"></i> Save</button>
             <button @click="viewForm(formData['id'])" type="button"  v-bind:disabled="formStatus === 'loading'? true : false" class="btn btn-secondary">Cancel</button>
           </template>
@@ -96,12 +96,18 @@
       }
     },
     props: {
-      api: String,
+      api: {
+        type: String,
+        required: true
+      },
       no_create: Boolean,
       no_delete: Boolean,
       read_only: Boolean,
-      inputs: Object,
-      entry_id: Number,
+      inputs: {
+        type: Object,
+        required: true
+      },
+      // entry_id: Number,
       retrieve_parameter: {
         type: Object,
         default: function(){
@@ -169,7 +175,6 @@
               // }
               this.formDataUpdated = !this.formDataUpdated
             }
-            console.log('start', this.formData)
             this.formStatus = 'view'
           })
         }

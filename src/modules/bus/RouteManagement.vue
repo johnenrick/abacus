@@ -18,17 +18,14 @@
     data(){
       let filterSetting = {
         description: {
-          label_colspan: 5
+          label_colspan: 5,
+          clause: 'like'
         }
       }
       let columnSetting = {
         description: {},
-        estimated_travel_duration: {},
-        icon: {
-          type: 'html',
-          value_function: (entry) => {
-            return '<i class="' + entry['icon'] + '" aria-hidden="true"></i>'
-          }
+        estimated_travel_duration: {
+          data_type: 'number'
         }
       }
       let tableSetting = {

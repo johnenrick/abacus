@@ -19,7 +19,6 @@ class AccountController extends APIController
           'account_information', 'account_type'
         );
         $this->APIControllerConstructor();
-
     }
     /*
       1. account

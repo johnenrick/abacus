@@ -89,6 +89,7 @@ export default{
     tableFilter: function(requestOption){
       while(this.dataSet.length > 0) { this.dataSet.pop() }
       this.APIRequest('bus_trip_ticket/dailySalesReport', requestOption, (response) => {
+        console.log('this', response)
         if(response['data']){
           let tableEntries = response['data']
           for(let x = 0; x < tableEntries.length; x++){

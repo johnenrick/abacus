@@ -8,8 +8,9 @@ let methods = {
     return number.replace(/,/g, '') * 1
   },
   padNumber(num, size) {
+
     var s = num + ''
-    while (s.length < size) s = '0' + s
+    while (s.length < (typeof size !== 'undefined' ? size : 2)) s = '0' + s
     return s
   }
 }

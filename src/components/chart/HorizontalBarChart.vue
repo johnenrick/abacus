@@ -1,25 +1,33 @@
 <template>
-<chart :options="options" style="width:100%" :auto-resize="true"></chart>
+<chart ref="chart" :options="options" style="width:100%;height:400px" :auto-resize="true"></chart>
 </template>
 <script>
 import ECharts from 'vue-echarts/components/ECharts'
 import 'echarts/lib/chart/bar'
 import 'echarts/lib/component/tooltip'
 import 'echarts/lib/component/polar'
+import Vue from 'vue'
 export default {
   name: 'BarChart',
   components: {
     'chart': ECharts
   },
+  mounted(){
+    setTimeout(() => {
+      $(this.$refs.chart).resize()
+    }, 1500)
+  },
   props: {
-    data_set: Array
+    data_set: Array,
+    name: String
   },
   data: function () {
     return {
       options: {
         grid: {
           show: true,
-          borderWidth: 3
+          borderWidth: 3,
+          left: '20%'
         },
         tooltip: {
           trigger: 'axis',
@@ -34,7 +42,7 @@ export default {
           }
         },
         xAxis: {
-          name: 'Quantity Sold',
+          name: this.name,
           nameLocation: 'center',
           nameTextStyle: {
             fontStyle: 'bold'
@@ -42,17 +50,24 @@ export default {
           nameGap: 40,
           type: 'value'
         },
-        series: [{
-          data: this.data_set,
+        series: []
+      }
+    }
+  },
+  watch: {
+    data_set(newValue){
+      let seriesData = []
+      for(let x = 0; x < this.data_set.length; x++){
+        let dataSet = {
           type: 'bar',
           lineStyle: {
-            width: 4
-          }
-          // itemStyle: {
-          //   color: [ '#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae', '#749f83', '#ca8622', '#bda29a', '#6e7074', '#546570', '#c4ccd3' ]
-          // }
-        }]
+            width: 2
+          },
+          data: this.data_set[x]
+        }
+        seriesData.push(dataSet)
       }
+      Vue.set(this.options, 'series', seriesData)
     }
   }
 }

@@ -44,12 +44,6 @@ class RetrieveEntry extends ControllerHelper
     $this->select = $select;
     $this->leftJoinChildTable = $leftJoinChildTable;
   }
-  public function addOrderBy($sort)
-  {
-    foreach($sort as $column => $order){
-      $this->model = $this->model->orderBy($column, $order);
-    }
-  }
   public function retrieveEntry($request){
     $allowedForeignTable = array_merge($this->foreignTable, $this->editableForeignTable, $this->requiredForeignTable);
     $tableName = $this->tableName;
@@ -63,6 +57,31 @@ class RetrieveEntry extends ControllerHelper
     //     $this->model = $this->model->leftJoinChildTable($pluralForeignTable, $pluralForeignTable.'.id', '=', $tableName.'.'.$singularForeignTable.'_id');
     //   }
     // }
+    if(isset($request['sort'])){
+      foreach($request['sort'] as $sortKey => $sortValue){
+        $sortKeySegment = explode('.', $sortKey);
+        // print_r($this->leftJoinChildTable);
+        // print_r($sortKeySegment);
+        // print_r($allowedForeignTable);
+        // print_r($this->foreignTable);
+        // echo 'tae';
+        if(count($sortKeySegment) == 2){
+          $table = str_plural($sortKeySegment[0]);
+          unset($request['sort'][$sortKey]);
+          $request['sort'][$table.'.'.$sortKeySegment[1]] = $sortValue;
+
+          if(in_array($sortKeySegment[0], $allowedForeignTable) && ($this->leftJoinChildTable == null || isset($this->leftJoinChildTable[$sortKeySegment[0]]))){
+            $singularForeignTable = str_singular($table);
+            if(in_array($singularForeignTable.'_id', $tableColumns)){ // the table is child
+              $this->model = $this->model->leftJoin($table, $table.'.id', '=', $tableName.'.'.$singularForeignTable.'_id');
+            }else{ // the table is parent
+              $this->model = $this->model->leftJoin($table, $tableName.'.id', '=', $table.'.'.$singularTableName.'_id');
+            }
+          }
+
+        }
+      }
+    }
     if($this->leftJoinChildTable){
       foreach($this->leftJoinChildTable as $table => $queryOption){
         $singularForeignTable = str_singular($table);
@@ -71,7 +90,11 @@ class RetrieveEntry extends ControllerHelper
     }
     $condition = isset($request['condition']) ? $this->initCondition($request['condition']) : array('main_table' => array(), 'foreign_table' => array());
     if(isset($request['with_foreign_table'])){
-        $this->model = $this->model->with($request['with_foreign_table']);
+      foreach($request['with_foreign_table'] as $foreignTable){
+        if(in_array($foreignTable, $allowedForeignTable)){
+          $this->model = $this->model->with($request['with_foreign_table']);
+        }
+      }
     }
     if(!empty($condition['foreign_table'])){
       $foreignTable = array();
@@ -118,6 +141,7 @@ class RetrieveEntry extends ControllerHelper
         $this->model = $this->model->with($this->requiredForeignTable);
     }
     if(count($condition['main_table'])){
+
       $this->addCondition($condition['main_table']);
     }
 
@@ -207,9 +231,12 @@ class RetrieveEntry extends ControllerHelper
       foreach($conditions as $condition){
         /*Table.Column, Clause, Value*/
         $condition["clause"] = (isset($condition["clause"])) ? $condition["clause"] : "=";
-        $condition["value"] = (isset($condition["value"])) ? $condition["value"] : null;
+        if(!isset($condition["value"]) || $condition["value"] == 'NULL'){
+          $condition["value"] = null;
+        }
         switch($condition["clause"]){
           default :
+            $this->response['debug'][] = $condition;
             $this->model = $this->model->where($condition["column"], $condition["clause"], $condition["value"]);
         }
       }

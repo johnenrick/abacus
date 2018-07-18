@@ -1,6 +1,9 @@
 import Vue from 'vue'
 
 Vue.mixin({
+  components: {
+    'loading-indicator': require('../components/common_module/LoadingIndicator.vue')
+  },
   methods: {
     commonModuleOptionizeArray(array, defaultValue, defaultLabel){
       let option = []
